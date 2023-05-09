@@ -9,3 +9,27 @@
     font-size: 30px;
     color: #35A2E6;
 }
+
+h2 {
+    width: 100%;
+    text-align: center;
+    border-bottom: 1px solid #7CC0EA;
+    line-height: 0.1em;
+    margin: 40px 0px;
+}
+
+h2 span {
+    background:#365466;
+    padding:0 10px;
+    color: #7CC0EA;
+    font-weight: 300;
+    font-size: 20px;
+}
+
+a {
+    color: #7CC0EA;
+}
+
+a:visited {
+    color: #7CC0EA;
+}

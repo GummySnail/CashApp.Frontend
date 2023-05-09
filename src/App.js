@@ -1,13 +1,19 @@
 import './App.css';
 import SignIn from "./components/sign-in";
 import {ThemeProvider, createTheme, CssBaseline} from "@mui/material";
+import SignUp from "./components/sign-up";
+import {BrowserRouter, Route, Routes} from "react-router-dom";
+import React from "react";
 const theme = createTheme({
     typography : {
-        fontFamily: "Poppins"
+        fontFamily: "Poppins",
     },
     palette:  {
         primary: {
             main: '#35A2E6'
+        },
+        warning: {
+            main: '#E64C4D'
         }
     }
 }
@@ -15,6 +21,11 @@ const theme = createTheme({
 export default function App() {
   return (<ThemeProvider theme={theme}>
       <CssBaseline/>
-        <SignIn/>
+      <BrowserRouter>
+          <Routes>
+            <Route index path='/sign-in' element={<SignIn/>}/>
+            <Route path='/sign-up' element={<SignUp/>}/>
+          </Routes>
+      </BrowserRouter>
     </ThemeProvider>);
 }

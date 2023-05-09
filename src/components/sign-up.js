@@ -1,31 +1,28 @@
-import { auth } from "../config/firebase.js";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import {useCallback, useMemo, useState} from "react";
 import {
-    Box,
+    Box, Button, Checkbox,
     Container,
     FormControlLabel,
     IconButton,
-    InputAdornment,
-    Link,
+    InputAdornment, Link,
     styled,
     TextField,
-    Checkbox,
-    Typography,
-    Button
-} from "@mui/material"
+    Typography
+} from "@mui/material";
 import "../App.css";
 import {Visibility, VisibilityOff} from "@mui/icons-material";
-import {useState, useCallback, useMemo} from "react";
-import {NavLink, useNavigate} from "react-router-dom";
+import {createUserWithEmailAndPassword} from "firebase/auth";
+import { auth } from "../config/firebase.js"
+import {NavLink} from "react-router-dom";
 
-export default function SignIn() {
-    const navigate = useNavigate();
-    //перенести в App.js (праз params)
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    //
+export default function SignUp() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const handleClickShowPassword = () => setShowPassword((show) => !show);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const handleClickShowPassword = () => setShowPassword((show1) => !show1);
+    const handleClickShowConfirmPassword = () => setShowConfirmPassword((show2) => !show2);
     const handleMouseDownPassword = (event) => {
         event.preventDefault();
     };
@@ -38,14 +35,16 @@ export default function SignIn() {
         setPassword(event.target.value);
     }, [setPassword]);
 
-    const signIn = async (e) => {
+    const handleChangeConfirmPassword = useCallback((event) => {
+        setConfirmPassword(event.target.value);
+    }, [setConfirmPassword]);
+    const signUp = async (e) => {
         e.preventDefault();
-
-            //await createUserWithEmailAndPassword(auth, email, password);
-        await signInWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                const user = userCredential.user;
-                //navigate("/dashboard");
+        await createUserWithEmailAndPassword(auth, email, password)
+            .then((userCredentials) => {
+                const user = userCredentials.user;
+                console.log(user);
+                //navigate('/dashboard')
             })
             .catch ((error) => {
                 const errorCode = error.code;
@@ -105,7 +104,7 @@ export default function SignIn() {
                             fontSize: 35,
                             fontWeight: '500'
                         }}>
-                        Welcome Back
+                        Create an Account
                     </Typography>
                     <Typography
                         sx={{
@@ -114,7 +113,7 @@ export default function SignIn() {
                             fontWeight: '500'
                         }}
                     >
-                        Sign in by entering information below
+                        Sign up by entering information below
                     </Typography>
                     <Box component="div" autoComplete="off" mt={5} noValidate sx={{maxWidth: '540px'}}>
                         <ValidationTextField
@@ -151,34 +150,35 @@ export default function SignIn() {
                                 )
                             }}
                         />
-                        <Box sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                        }}>
-                                <FormControlLabel
-                                    control={
-                                    <Checkbox
-                                        value="remember"
-                                        color="primary"
-                                        defaultChecked
-                                        sx={{color: '#35A2E6'}}/>
-                                    }
-                                    label="Remember Me"
-                                    sx={{
-                                        color: '#7CC0EA',
-                                        fontSize: 13,
-                                    }}
-                                />
-                            <Link href="#" sx={{ color: '#7CC0EA'}}>
-                                Forgot password?
-                            </Link>
-                        </Box>
+                        <ValidationTextField
+                            margin="normal"
+                            required
+                            fullWidth
+                            id="confirmPassword"
+                            label="Confirm Password"
+                            name="confirmPassword"
+                            type={showConfirmPassword ? "text" : "password"}
+                            value={confirmPassword}
+                            onChange={handleChangeConfirmPassword}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            color="primary"
+                                            aria-label="toggle password visibility"
+                                            onClick={handleClickShowConfirmPassword}
+                                            onMouseDown={handleMouseDownPassword}>
+                                            {showConfirmPassword ? <Visibility/> : <VisibilityOff/>}
+                                        </IconButton>
+                                    </InputAdornment>
+                                )
+                            }}
+                        />
                         <Button
                             fullWidth
                             color='primary'
                             variant="contained"
-                            onClick={signIn}
+                            onClick={signUp}
                             sx={{
                                 mt:3,
                                 mb:2,
@@ -186,7 +186,7 @@ export default function SignIn() {
                                 fontSize: 16,
                                 fontWeight: '400',
                                 fontFamily: "Roboto"
-                            }}>Sign In</Button>
+                            }}>Sign Up</Button>
                         <Typography
                             sx={{
                                 display: 'flex',
@@ -196,9 +196,10 @@ export default function SignIn() {
                                 justifyContent: 'center',
                             }}
                         >
-                            Don’t have an account? Create one&nbsp;<NavLink to="/sign-up">Here</NavLink>
+                            Already have an account? Sign In&nbsp;<NavLink to="/sign-in">Here</NavLink>
                         </Typography>
                         <h2><span>or</span></h2>
+
                     </Box>
                 </Box>
             </Container>
