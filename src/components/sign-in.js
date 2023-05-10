@@ -1,5 +1,5 @@
-import { auth } from "../config/firebase.js";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { auth, googleProvider } from "../config/firebase.js";
+import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import {
     Box,
     Container,
@@ -15,8 +15,9 @@ import {
 } from "@mui/material"
 import "../App.css";
 import {Visibility, VisibilityOff} from "@mui/icons-material";
-import {useState, useCallback, useMemo} from "react";
+import React, {useState, useCallback, useMemo} from "react";
 import {NavLink, useNavigate} from "react-router-dom";
+import GoogleIcon from "@mui/icons-material/Google";
 
 export default function SignIn() {
     const navigate = useNavigate();
@@ -41,13 +42,28 @@ export default function SignIn() {
     const signIn = async (e) => {
         e.preventDefault();
 
-            //await createUserWithEmailAndPassword(auth, email, password);
         await signInWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
                 const user = userCredential.user;
+                console.log(user);
                 //navigate("/dashboard");
             })
             .catch ((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.log(errorCode, errorMessage);
+            });
+    };
+
+    const signInWithGoogle = async (e) => {
+        e.preventDefault();
+
+        await signInWithPopup(auth, googleProvider)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                //navigate("dashboard");
+            })
+            .catch((error) => {
                 const errorCode = error.code;
                 const errorMessage = error.message;
                 console.log(errorCode, errorMessage);
@@ -199,6 +215,21 @@ export default function SignIn() {
                             Don’t have an account? Create one&nbsp;<NavLink to="/sign-up">Here</NavLink>
                         </Typography>
                         <h2><span>or</span></h2>
+                        <Box sx={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}>
+                            <Button onClick={signInWithGoogle} size="large" startIcon={<GoogleIcon/>}>
+                                <Typography sx={{color: '#35A2E6', fontSize: 24, textTransform: 'none'}}>
+                                    Sign In with Google
+                                </Typography>
+                            </Button>
+                        </Box>
+                        <Typography sx={{position: 'fixed', left: 0, bottom: 0, width: '100%', textAlign: 'center', padding: '10px', color: '#7CC0EA'}}>
+                            @2023 CashApp
+                        </Typography>
                     </Box>
                 </Box>
             </Container>

@@ -1,18 +1,20 @@
-import {useCallback, useMemo, useState} from "react";
+import React, {useCallback, useMemo, useState} from "react";
 import {
-    Box, Button, Checkbox,
+    Box,
+    Button,
     Container,
-    FormControlLabel,
+    Icon,
     IconButton,
-    InputAdornment, Link,
+    InputAdornment,
     styled,
     TextField,
     Typography
 } from "@mui/material";
 import "../App.css";
-import {Visibility, VisibilityOff} from "@mui/icons-material";
-import {createUserWithEmailAndPassword} from "firebase/auth";
-import { auth } from "../config/firebase.js"
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import GoogleIcon from '@mui/icons-material/Google';
+import {createUserWithEmailAndPassword, signInWithPopup} from "firebase/auth";
+import {auth, googleProvider} from "../config/firebase.js"
 import {NavLink} from "react-router-dom";
 
 export default function SignUp() {
@@ -47,6 +49,21 @@ export default function SignUp() {
                 //navigate('/dashboard')
             })
             .catch ((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.log(errorCode, errorMessage);
+            });
+    };
+
+    const signUpWithGoogle = async (e) => {
+        e.preventDefault();
+        await signInWithPopup(auth, googleProvider)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                console.log(user);
+                //navigate("dashboard");
+            })
+            .catch((error) => {
                 const errorCode = error.code;
                 const errorMessage = error.message;
                 console.log(errorCode, errorMessage);
@@ -199,7 +216,29 @@ export default function SignUp() {
                             Already have an account? Sign In&nbsp;<NavLink to="/sign-in">Here</NavLink>
                         </Typography>
                         <h2><span>or</span></h2>
-
+                        <Box sx={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}>
+                            <Button onClick={signUpWithGoogle} size="large" startIcon={<GoogleIcon/>}>
+                                <Typography sx={{color: '#35A2E6', fontSize: 24, textTransform: 'none'}}>
+                                    Sign Up with Google
+                                </Typography>
+                            </Button>
+                        </Box>
+                        <Typography sx={{
+                            position: 'fixed',
+                            left: 0,
+                            bottom: 0,
+                            width: '100%',
+                            textAlign: 'center',
+                            padding: '10px',
+                            color: '#7CC0EA',
+                        }}>
+                            @2023 CashApp
+                        </Typography>
                     </Box>
                 </Box>
             </Container>
