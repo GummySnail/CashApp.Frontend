@@ -4,6 +4,7 @@ import {ThemeProvider, createTheme, CssBaseline} from "@mui/material";
 import SignUp from "./components/sign-up";
 import {BrowserRouter, Route, Routes} from "react-router-dom";
 import React from "react";
+import ForgotPassword from "./components/forgot-password";
 const theme = createTheme({
     typography : {
         fontFamily: "Poppins",
@@ -25,6 +26,7 @@ export default function App() {
           <Routes>
             <Route index path='/sign-in' element={<SignIn/>}/>
             <Route path='/sign-up' element={<SignUp/>}/>
+            <Route path='/forgot-password' element={<ForgotPassword/>}/>
           </Routes>
       </BrowserRouter>
     </ThemeProvider>);

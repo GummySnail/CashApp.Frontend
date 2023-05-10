@@ -186,9 +186,9 @@ export default function SignIn() {
                                         fontSize: 13,
                                     }}
                                 />
-                            <Link href="#" sx={{ color: '#7CC0EA'}}>
+                            <NavLink to='/forgot-password'>
                                 Forgot password?
-                            </Link>
+                            </NavLink>
                         </Box>
                         <Button
                             fullWidth
