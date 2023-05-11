@@ -1,9 +1,8 @@
-import React, {useCallback, useMemo, useState} from "react";
+import React, {useMemo, useState} from "react";
 import {
     Box,
     Button,
     Container,
-    Icon,
     IconButton,
     InputAdornment,
     styled,
@@ -16,33 +15,47 @@ import GoogleIcon from '@mui/icons-material/Google';
 import {createUserWithEmailAndPassword, signInWithPopup} from "firebase/auth";
 import {auth, googleProvider} from "../config/firebase.js"
 import {NavLink} from "react-router-dom";
+import { useSignUpFormValidator } from "../hooks/useSignUpFormValidator";
 
 export default function SignUp() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const handleClickShowPassword = () => setShowPassword((show1) => !show1);
-    const handleClickShowConfirmPassword = () => setShowConfirmPassword((show2) => !show2);
+
+    const [form, setForm] = useState({
+        email: "",
+        password: "",
+        confirmPassword: "",
+    });
+
+    const { errors, validateForm, onBlurField} = useSignUpFormValidator(form);
+
+    const onUpdateField = e => {
+        const field = e.target.name;
+        const nextFormState = {
+            ...form,
+            [field]: e.target.value,
+        };
+
+        setForm(nextFormState);
+        if (errors[field].dirty)
+            validateForm({
+                form: nextFormState,
+                errors,
+                field,
+            });
+    };
+
+    const handleClickShowPassword = () => setShowPassword((show) => !show);
+    const handleClickShowConfirmPassword = () => setShowConfirmPassword((show) => !show);
     const handleMouseDownPassword = (event) => {
         event.preventDefault();
     };
 
-    const handleChangeEmail = useCallback( (event) => {
-        setEmail(event.target.value);
-    }, [setEmail]);
-
-    const handleChangePassword = useCallback((event) => {
-        setPassword(event.target.value);
-    }, [setPassword]);
-
-    const handleChangeConfirmPassword = useCallback((event) => {
-        setConfirmPassword(event.target.value);
-    }, [setConfirmPassword]);
     const signUp = async (e) => {
         e.preventDefault();
-        await createUserWithEmailAndPassword(auth, email, password)
+        const { isValid } = validateForm({ form, errors, forceTouchErrors: true});
+        if (!isValid) return;
+        await createUserWithEmailAndPassword(auth, form.email, form.password)
             .then((userCredentials) => {
                 const user = userCredentials.user;
                 console.log(user);
@@ -132,7 +145,7 @@ export default function SignUp() {
                     >
                         Sign up by entering information below
                     </Typography>
-                    <Box component="div" autoComplete="off" mt={5} noValidate sx={{maxWidth: '540px'}}>
+                    <Box component="div" autoComplete="off" mt={5} sx={{maxWidth: '540px'}}>
                         <ValidationTextField
                             margin="normal"
                             required
@@ -140,9 +153,15 @@ export default function SignUp() {
                             id="email"
                             label="Email Address"
                             name="email"
-                            value={email}
-                            onChange={handleChangeEmail}
+                            helperText={errors.email.dirty && errors.email.error ? (
+                                <Typography component={'span'}>{errors.email.message}</Typography>
+                            ) : null}
+                            error={!!errors.email.error}
+                            value={form.email}
+                            onChange={onUpdateField}
+                            onBlur={onBlurField}
                         />
+
                         <ValidationTextField
                             margin="normal"
                             required
@@ -150,9 +169,14 @@ export default function SignUp() {
                             id="password"
                             label="Password"
                             name="password"
+                            helperText={errors.password.dirty && errors.password.error ? (
+                                <Typography component={'span'}>{errors.password.message}</Typography>
+                            ) : null}
                             type={showPassword ? "text" : "password"}
-                            value={password}
-                            onChange={handleChangePassword}
+                            value={form.password}
+                            error={!!errors.password.error}
+                            onChange={onUpdateField}
+                            onBlur={onBlurField}
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">
@@ -174,9 +198,14 @@ export default function SignUp() {
                             id="confirmPassword"
                             label="Confirm Password"
                             name="confirmPassword"
+                            helperText={errors.confirmPassword.dirty && errors.confirmPassword.error ? (
+                                <Typography component={'span'}>{errors.confirmPassword.message}</Typography>
+                            ) : null}
                             type={showConfirmPassword ? "text" : "password"}
-                            value={confirmPassword}
-                            onChange={handleChangeConfirmPassword}
+                            value={form.confirmPassword}
+                            error={!!errors.confirmPassword.error}
+                            onChange={onUpdateField}
+                            onBlur={onBlurField}
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">
