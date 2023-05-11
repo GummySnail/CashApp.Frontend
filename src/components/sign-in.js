@@ -18,31 +18,43 @@ import {Visibility, VisibilityOff} from "@mui/icons-material";
 import React, {useState, useCallback, useMemo} from "react";
 import {NavLink, useNavigate} from "react-router-dom";
 import GoogleIcon from "@mui/icons-material/Google";
+import { useSignInFormValidator } from "../hooks/useSignInFormValidator";
 
 export default function SignIn() {
-    const navigate = useNavigate();
-    //перенести в App.js (праз params)
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    //
     const [showPassword, setShowPassword] = useState(false);
     const handleClickShowPassword = () => setShowPassword((show) => !show);
     const handleMouseDownPassword = (event) => {
         event.preventDefault();
     };
 
-    const handleChangeEmail = useCallback( (event) => {
-        setEmail(event.target.value);
-    }, [setEmail]);
+    const [form, setForm] = useState({
+        email: "",
+        password: "",
+    });
 
-    const handleChangePassword = useCallback((event) => {
-        setPassword(event.target.value);
-    }, [setPassword]);
+    const {errors, validateForm, onBlurField} = useSignInFormValidator(form);
+
+    const onUpdateField = e => {
+        const field = e.target.name;
+        const nextFormState = {
+            ...form,
+            [field]: e.target.value,
+        };
+
+        setForm(nextFormState);
+        if (errors[field].dirty)
+            validateForm({
+                form: nextFormState,
+                errors,
+                field,
+            });
+    };
 
     const signIn = async (e) => {
         e.preventDefault();
-
-        await signInWithEmailAndPassword(auth, email, password)
+        const {isValid} = validateForm({form, errors, forceTouchErrors: true});
+        if (!isValid) return;
+        await signInWithEmailAndPassword(auth, form.email, form.password)
             .then((userCredential) => {
                 const user = userCredential.user;
                 console.log(user);
@@ -140,8 +152,13 @@ export default function SignIn() {
                             id="email"
                             label="Email Address"
                             name="email"
-                            value={email}
-                            onChange={handleChangeEmail}
+                            helperText={errors.email.dirty && errors.email.error ? (
+                                <Typography component={'span'}>{errors.email.message}</Typography>
+                            ) : null}
+                            error={!!errors.email.error}
+                            value={form.email}
+                            onChange={onUpdateField}
+                            onBlur={onBlurField}
                         />
                         <ValidationTextField
                             margin="normal"
@@ -150,9 +167,14 @@ export default function SignIn() {
                             id="password"
                             label="Password"
                             name="password"
+                            helperText={errors.password.dirty && errors.password.error ? (
+                                <Typography component={'span'}>{errors.password.message}</Typography>
+                            ) : null}
                             type={showPassword ? "text" : "password"}
-                            value={password}
-                            onChange={handleChangePassword}
+                            value={form.password}
+                            error={!!errors.password.error}
+                            onChange={onUpdateField}
+                            onBlur={onBlurField}
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">

@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
     emailValidator,
     passwordValidator,
-    confirmPasswordValidator,
 } from "../validators/sign-up-validator";
 
 const touchError = errors => {
@@ -15,7 +14,7 @@ const touchError = errors => {
     }, {});
 };
 
-export const useSignUpFormValidator = form => {
+export const useSignInFormValidator = form => {
     const [errors, setErrors] = useState({
         email: {
             dirty: false,
@@ -23,11 +22,6 @@ export const useSignUpFormValidator = form => {
             message: "",
         },
         password: {
-            dirty: false,
-            error: false,
-            message: "",
-        },
-        confirmPassword: {
             dirty: false,
             error: false,
             message: "",
@@ -42,7 +36,7 @@ export const useSignUpFormValidator = form => {
             nextErrors = touchError(errors);
         }
 
-        const { email, password, confirmPassword } = form;
+        const { email, password } = form;
 
         if (nextErrors.email.dirty && (field ? field === "email" : true)) {
             const emailMessage = emailValidator(email, form);
@@ -56,13 +50,6 @@ export const useSignUpFormValidator = form => {
             nextErrors.password.error = !!passwordMessage;
             nextErrors.password.message = passwordMessage;
             if (!!passwordMessage) isValid = false;
-        }
-
-        if (nextErrors.confirmPassword.dirty && (field ? field === "confirmPassword" : true)){
-            const confirmPasswordMessage = confirmPasswordValidator(confirmPassword, form);
-            nextErrors.confirmPassword.error = !!confirmPasswordMessage;
-            nextErrors.confirmPassword.message = confirmPasswordMessage;
-            if (!!confirmPasswordMessage) isValid = false;
         }
 
         setErrors(nextErrors);

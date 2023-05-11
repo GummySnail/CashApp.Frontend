@@ -20,6 +20,11 @@ import { useSignUpFormValidator } from "../hooks/useSignUpFormValidator";
 export default function SignUp() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const handleClickShowPassword = () => setShowPassword((show) => !show);
+    const handleClickShowConfirmPassword = () => setShowConfirmPassword((show) => !show);
+    const handleMouseDownPassword = (event) => {
+        event.preventDefault();
+    };
 
     const [form, setForm] = useState({
         email: "",
@@ -45,12 +50,6 @@ export default function SignUp() {
             });
     };
 
-    const handleClickShowPassword = () => setShowPassword((show) => !show);
-    const handleClickShowConfirmPassword = () => setShowConfirmPassword((show) => !show);
-    const handleMouseDownPassword = (event) => {
-        event.preventDefault();
-    };
-
     const signUp = async (e) => {
         e.preventDefault();
         const { isValid } = validateForm({ form, errors, forceTouchErrors: true});
@@ -70,6 +69,7 @@ export default function SignUp() {
 
     const signUpWithGoogle = async (e) => {
         e.preventDefault();
+
         await signInWithPopup(auth, googleProvider)
             .then((userCredential) => {
                 const user = userCredential.user;
