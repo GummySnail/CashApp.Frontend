@@ -14,10 +14,11 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 import GoogleIcon from '@mui/icons-material/Google';
 import {createUserWithEmailAndPassword, signInWithPopup} from "firebase/auth";
 import {auth, googleProvider} from "../config/firebase.js"
-import {NavLink} from "react-router-dom";
+import {NavLink, useNavigate} from "react-router-dom";
 import { useSignUpFormValidator } from "../hooks/useSignUpFormValidator";
 
 export default function SignUp() {
+    const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const handleClickShowPassword = () => setShowPassword((show) => !show);
@@ -55,10 +56,10 @@ export default function SignUp() {
         const { isValid } = validateForm({ form, errors, forceTouchErrors: true});
         if (!isValid) return;
         await createUserWithEmailAndPassword(auth, form.email, form.password)
-            .then((userCredentials) => {
-                const user = userCredentials.user;
-                console.log(user);
-                //navigate('/dashboard')
+            .then(async (userCredentials) => {
+                const accessToken = await userCredentials.user.getIdToken();
+                localStorage.setItem("access_token", JSON.stringify(accessToken));
+                navigate("/");
             })
             .catch ((error) => {
                 const errorCode = error.code;
@@ -71,10 +72,10 @@ export default function SignUp() {
         e.preventDefault();
 
         await signInWithPopup(auth, googleProvider)
-            .then((userCredential) => {
-                const user = userCredential.user;
-                console.log(user);
-                //navigate("dashboard");
+            .then(async (userCredentials) => {
+                const accessToken = await userCredentials.user.getIdToken();
+                localStorage.setItem("access_token", JSON.stringify(accessToken));
+                navigate("/");
             })
             .catch((error) => {
                 const errorCode = error.code;

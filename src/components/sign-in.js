@@ -6,7 +6,6 @@ import {
     FormControlLabel,
     IconButton,
     InputAdornment,
-    Link,
     styled,
     TextField,
     Checkbox,
@@ -15,12 +14,14 @@ import {
 } from "@mui/material"
 import "../App.css";
 import {Visibility, VisibilityOff} from "@mui/icons-material";
-import React, {useState, useCallback, useMemo} from "react";
-import {NavLink, useNavigate} from "react-router-dom";
+import React, {useState, useMemo} from "react";
+import {NavLink} from "react-router-dom";
 import GoogleIcon from "@mui/icons-material/Google";
 import { useSignInFormValidator } from "../hooks/useSignInFormValidator";
+import {useNavigate} from "react-router-dom";
 
 export default function SignIn() {
+    const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const handleClickShowPassword = () => setShowPassword((show) => !show);
     const handleMouseDownPassword = (event) => {
@@ -55,10 +56,10 @@ export default function SignIn() {
         const {isValid} = validateForm({form, errors, forceTouchErrors: true});
         if (!isValid) return;
         await signInWithEmailAndPassword(auth, form.email, form.password)
-            .then((userCredential) => {
-                const user = userCredential.user;
-                console.log(user);
-                //navigate("/dashboard");
+            .then(async (userCredentials) => {
+                const accessToken = await userCredentials.user.getIdToken();
+                localStorage.setItem("access_token", JSON.stringify(accessToken));
+                navigate("/");
             })
             .catch ((error) => {
                 const errorCode = error.code;
@@ -71,9 +72,10 @@ export default function SignIn() {
         e.preventDefault();
 
         await signInWithPopup(auth, googleProvider)
-            .then((userCredential) => {
-                const user = userCredential.user;
-                //navigate("dashboard");
+            .then(async (userCredentials) => {
+                const accessToken = await userCredentials.user.getIdToken();
+                localStorage.setItem("access_token", JSON.stringify(accessToken));
+                navigate("/");
             })
             .catch((error) => {
                 const errorCode = error.code;

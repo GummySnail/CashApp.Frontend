@@ -25,4 +25,4 @@ export const confirmPasswordValidator = (confirmPassword, form) => {
         return "Password do not match";
     }
     return "";
-}
+};
