@@ -1,6 +1,6 @@
 export default function Dashboard() {
 
     return (
-        <h1>Hel</h1>
+        <h1></h1>
     )
 }

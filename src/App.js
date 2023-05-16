@@ -1,13 +1,13 @@
 import './App.css';
-import SignIn from "./components/sign-in";
+import SignIn from "./components/SignIn";
 import {ThemeProvider, createTheme, CssBaseline, Modal, Typography, TextField} from "@mui/material";
-import SignUp from "./components/sign-up";
+import SignUp from "./components/SignUp";
 import {BrowserRouter, Route, Routes, Navigate, Outlet} from "react-router-dom";
 import React, {useEffect, useState} from "react";
-import ForgotPassword from "./components/forgot-password";
-import Dashboard from "./components/dashboard";
+import ForgotPassword from "./components/ForgotPassword";
 import {getCurrentUser} from "./helpers";
 import {ProtectedRoute} from "./components/ProtectedRoute";
+import Main from "./Main";
 
 const theme = createTheme({
     typography : {
@@ -37,10 +37,11 @@ export default function App() {
                         <Route path='/forgot-password' element={<ForgotPassword/>}/>
                       </>
                   }
-                  <Route element={<ProtectedRoute />}>
-                      <Route index element={<Dashboard/>}/>
-                  </Route>
-                  <Route path="*" element={<p>There's nothing here: 404!</p>} />
+                  <Route path="*" element={
+                      <ProtectedRoute>
+                      <Main/>
+                      </ProtectedRoute>
+                  }/>
               </Routes>
           </BrowserRouter>
     </ThemeProvider>);
