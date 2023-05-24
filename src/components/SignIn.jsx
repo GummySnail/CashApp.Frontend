@@ -1,5 +1,5 @@
 import { auth, googleProvider } from "../config/firebase.js";
-import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { signInWithEmailAndPassword, signInWithPopup, createUserWithEmailAndPassword } from "firebase/auth";
 import {
     Box,
     Container,
@@ -17,46 +17,47 @@ import {Visibility, VisibilityOff} from "@mui/icons-material";
 import React, {useState, useMemo} from "react";
 import {NavLink} from "react-router-dom";
 import GoogleIcon from "@mui/icons-material/Google";
-import { useSignInFormValidator } from "../hooks/useSignInFormValidator";
 import {useNavigate} from "react-router-dom";
+import { Formik, Form, Field } from 'formik';
+import * as Yup from 'yup'
 
 export default function SignIn() {
     const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const handleClickShowPassword = () => setShowPassword((show) => !show);
+    
     const handleMouseDownPassword = (event) => {
         event.preventDefault();
     };
 
-    const [form, setForm] = useState({
+    const defaultInputValues = {
         email: "",
-        password: "",
-    });
-
-    const {errors, validateForm, onBlurField} = useSignInFormValidator(form);
-
-    const onUpdateField = e => {
-        const field = e.target.name;
-        const nextFormState = {
-            ...form,
-            [field]: e.target.value,
-        };
-
-        setForm(nextFormState);
-        if (errors[field].dirty)
-            validateForm({
-                form: nextFormState,
-                errors,
-                field,
-            });
+        password: ""
     };
 
-    const signIn = async (e) => {
-        e.preventDefault();
-        const {isValid} = validateForm({form, errors, forceTouchErrors: true});
-        if (!isValid) return;
-        await signInWithEmailAndPassword(auth, form.email, form.password)
+   const [values, setValues] = useState(defaultInputValues);
+
+    const validationSchema = Yup.object().shape({
+        email: Yup.string()
+            .required('Email is required')
+            .email('Email is invalid'),
+
+        password: Yup.string()
+            .required('Password is required')
+            .min(6, 'User must be at least 6 characters')           
+    });   
+      
+
+
+    const handleChange = (value) => {
+        setValues(value)
+    };
+    
+   
+    const signIn = async (auth, defaultInputValues) => {
+        await signInWithEmailAndPassword(auth, defaultInputValues.email, defaultInputValues.password)
             .then(async (userCredentials) => {
+               
                 const accessToken = await userCredentials.user.getIdToken();
                 localStorage.setItem("access_token", JSON.stringify(accessToken));
                 navigate("/");
@@ -113,6 +114,7 @@ export default function SignIn() {
         },
     }), []);
 
+   
     return (
         <Box sx={{ width: '100%', bgcolor: 'primary.main'}}>
             <Container component="main" maxWidth="md">
@@ -147,36 +149,49 @@ export default function SignIn() {
                         Sign in by entering information below
                     </Typography>
                     <Box component="div" autoComplete="off" mt={5} noValidate sx={{maxWidth: '540px'}}>
+
+        <Formik
+            initialValues={{
+                email: '',
+                password: ''
+            }}
+            validationSchema={validationSchema}
+            onSubmit={values => {
+                signIn(auth,values);       
+            }}
+            >
+
+            {({ errors }) => (
+                <Form >
+                  
+                    <Field name="email">
+                    {(props) => (
+                        <>
+                            <ValidationTextField
+                                label="Email"
+                                {...props.field}
+                                margin="normal"
+                                fullWidth
+                                id={props.field.name}
+                                error={errors.email ? true : false}
+                                helperText={errors.email}                
+                            />
+                        </>
+                    )}
+                    </Field>
+                
+                    <Field name="password">
+                    {(props) => (
+                        <>
                         <ValidationTextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            id="email"
-                            label="Email Address"
-                            name="email"
-                            helperText={errors.email.dirty && errors.email.error ? (
-                                <Typography component={'span'}>{errors.email.message}</Typography>
-                            ) : null}
-                            error={!!errors.email.error}
-                            value={form.email}
-                            onChange={onUpdateField}
-                            onBlur={onBlurField}
-                        />
-                        <ValidationTextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            id="password"
                             label="Password"
-                            name="password"
-                            helperText={errors.password.dirty && errors.password.error ? (
-                                <Typography component={'span'}>{errors.password.message}</Typography>
-                            ) : null}
                             type={showPassword ? "text" : "password"}
-                            value={form.password}
-                            error={!!errors.password.error}
-                            onChange={onUpdateField}
-                            onBlur={onBlurField}
+                            {...props.field}
+                            margin="normal"
+                            fullWidth
+                            id={props.field.name}
+                            error={errors.password ? true : false}
+                            helperText={errors.password}   
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">
@@ -189,9 +204,12 @@ export default function SignIn() {
                                         </IconButton>
                                     </InputAdornment>
                                 )
-                            }}
+                            }}                
                         />
-                        <Box sx={{
+                        </>
+                    )}
+                    </Field>
+                            <Box sx={{
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
@@ -218,7 +236,7 @@ export default function SignIn() {
                             fullWidth
                             color='primary'
                             variant="contained"
-                            onClick={signIn}
+                            type="submit"
                             sx={{
                                 mt:3,
                                 mb:2,
@@ -227,6 +245,11 @@ export default function SignIn() {
                                 fontWeight: '400',
                                 fontFamily: "Roboto"
                             }}>Sign In</Button>
+
+                    </Form>
+                )}
+
+        </Formik>  
                         <Typography
                             sx={{
                                 display: 'flex',
@@ -237,7 +260,7 @@ export default function SignIn() {
                             }}
                         >
                             Don’t have an account? Create one&nbsp;<NavLink to="/sign-up">Here</NavLink>
-                        </Typography>
+                        </Typography> 
                         <h2><span>or</span></h2>
                         <Box sx={{
                             display: 'flex',
@@ -250,13 +273,17 @@ export default function SignIn() {
                                     Sign In with Google
                                 </Typography>
                             </Button>
-                        </Box>
+                        </Box> 
                         <Typography sx={{position: 'fixed', left: 0, bottom: 0, width: '100%', textAlign: 'center', padding: '10px', color: '#7CC0EA'}}>
                             @2023 CashApp
-                        </Typography>
+                        </Typography>             
+                  
                     </Box>
                 </Box>
             </Container>
         </Box>
+    
     )
 }
+    
+                             
