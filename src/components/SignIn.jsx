@@ -1,5 +1,5 @@
 import { auth, googleProvider } from "../config/firebase.js";
-import { signInWithEmailAndPassword, signInWithPopup, createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import {
     Box,
     Container,
@@ -24,6 +24,7 @@ import * as Yup from 'yup'
 export default function SignIn() {
     const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
+    const [showError, setShowError] = useState (false);
     const handleClickShowPassword = () => setShowPassword((show) => !show);
     
     const handleMouseDownPassword = (event) => {
@@ -35,8 +36,6 @@ export default function SignIn() {
         password: ""
     };
 
-   const [values, setValues] = useState(defaultInputValues);
-
     const validationSchema = Yup.object().shape({
         email: Yup.string()
             .required('Email is required')
@@ -47,17 +46,12 @@ export default function SignIn() {
             .min(6, 'User must be at least 6 characters')           
     });   
       
-
-
-    const handleChange = (value) => {
-        setValues(value)
-    };
     
    
     const signIn = async (auth, defaultInputValues) => {
+
         await signInWithEmailAndPassword(auth, defaultInputValues.email, defaultInputValues.password)
-            .then(async (userCredentials) => {
-               
+            .then(async (userCredentials) => {             
                 const accessToken = await userCredentials.user.getIdToken();
                 localStorage.setItem("access_token", JSON.stringify(accessToken));
                 navigate("/");
@@ -66,6 +60,9 @@ export default function SignIn() {
                 const errorCode = error.code;
                 const errorMessage = error.message;
                 console.log(errorCode, errorMessage);
+                if (errorCode === 'auth/user-not-found') {
+                    setShowError(true);
+                }
             });
     };
 
@@ -161,7 +158,7 @@ export default function SignIn() {
             }}
             >
 
-            {({ errors }) => (
+            {({ errors, touched, validateForm}) => (
                 <Form >
                   
                     <Field name="email">
@@ -173,8 +170,8 @@ export default function SignIn() {
                                 margin="normal"
                                 fullWidth
                                 id={props.field.name}
-                                error={errors.email ? true : false}
-                                helperText={errors.email}                
+                                error={errors.email && touched.email ? true : false}
+                                helperText={errors.email && touched.email ? errors.email : ''}               
                             />
                         </>
                     )}
@@ -190,8 +187,8 @@ export default function SignIn() {
                             margin="normal"
                             fullWidth
                             id={props.field.name}
-                            error={errors.password ? true : false}
-                            helperText={errors.password}   
+                            error={errors.password && touched.password ? true : false}
+                            helperText={errors.password && touched.password ? errors.password : ''} 
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">
@@ -232,11 +229,27 @@ export default function SignIn() {
                                 Forgot password?
                             </NavLink>
                         </Box>
+
+                        <Typography
+                            sx={{
+                                display: 'flex',
+                                color: '#d32f2f',
+                                fontSize: 18,
+                                fontWeight: '500',
+                                justifyContent: 'center',
+                                visibility: showError ? "visible" : "hidden"
+                            }}
+                        >
+                            Email or Password is incorrect
+                            </Typography>
+
                         <Button
                             fullWidth
                             color='primary'
                             variant="contained"
                             type="submit"
+                            onClick={() => validateForm()}
+
                             sx={{
                                 mt:3,
                                 mb:2,

@@ -15,7 +15,8 @@ import GoogleIcon from '@mui/icons-material/Google';
 import {createUserWithEmailAndPassword, signInWithPopup} from "firebase/auth";
 import {auth, googleProvider} from "../config/firebase.js"
 import {NavLink, useNavigate} from "react-router-dom";
-import { useSignUpFormValidator } from "../hooks/useSignUpFormValidator";
+import { Formik, Form, Field } from 'formik';
+import * as Yup from 'yup'
 
 export default function SignUp() {
     const navigate = useNavigate();
@@ -23,39 +24,34 @@ export default function SignUp() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const handleClickShowPassword = () => setShowPassword((show) => !show);
     const handleClickShowConfirmPassword = () => setShowConfirmPassword((show) => !show);
+
     const handleMouseDownPassword = (event) => {
         event.preventDefault();
     };
 
-    const [form, setForm] = useState({
+    const defaultInputValues = {
         email: "",
         password: "",
-        confirmPassword: "",
-    });
-
-    const { errors, validateForm, onBlurField} = useSignUpFormValidator(form);
-
-    const onUpdateField = e => {
-        const field = e.target.name;
-        const nextFormState = {
-            ...form,
-            [field]: e.target.value,
-        };
-
-        setForm(nextFormState);
-        if (errors[field].dirty)
-            validateForm({
-                form: nextFormState,
-                errors,
-                field,
-            });
+        confirmPassword: ""
     };
 
-    const signUp = async (e) => {
-        e.preventDefault();
-        const { isValid } = validateForm({ form, errors, forceTouchErrors: true});
-        if (!isValid) return;
-        await createUserWithEmailAndPassword(auth, form.email, form.password)
+    const validationSchema = Yup.object().shape({
+        email: Yup.string()
+            .required('Email is required')
+            .email('Email is invalid'),
+
+        password: Yup.string()
+            .required('Password is required')
+            .min(6, 'User must be at least 6 characters') ,
+
+        confirmPassword:  Yup.string()
+            .required('Confirm password is required') 
+            .oneOf([Yup.ref('password'), null], 'Passwords must match')     
+    }); 
+
+    const signUp = async (auth, defaultInputValues) => {
+
+        await createUserWithEmailAndPassword(auth, defaultInputValues.email, defaultInputValues.password)
             .then(async (userCredentials) => {
                 const accessToken = await userCredentials.user.getIdToken();
                 localStorage.setItem("access_token", JSON.stringify(accessToken));
@@ -147,37 +143,51 @@ export default function SignUp() {
                         Sign up by entering information below
                     </Typography>
                     <Box component="div" autoComplete="off" mt={5} sx={{maxWidth: '540px'}}>
-                        <ValidationTextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            id="email"
-                            label="Email Address"
-                            name="email"
-                            helperText={errors.email.dirty && errors.email.error ? (
-                                <Typography component={'span'}>{errors.email.message}</Typography>
-                            ) : null}
-                            error={!!errors.email.error}
-                            value={form.email}
-                            onChange={onUpdateField}
-                            onBlur={onBlurField}
-                        />
 
+                    <Formik
+                    initialValues={{
+                        email: '',
+                        password: '',
+                        confirmPassword: ''
+                    }}
+                    validationSchema={validationSchema}
+                    onSubmit={values => {
+                    
+                        signUp(auth,values);       
+                    }}
+                    >
+
+                    {({ errors, touched, validateForm}) => (
+                        <Form >
+
+                    <Field name="email">
+                    {(props) => (
+                        <>
+                            <ValidationTextField
+                                label="Email"
+                                {...props.field}
+                                margin="normal"
+                                fullWidth
+                                id={props.field.name}
+                                error={errors.email && touched.email ? true : false}
+                                helperText={errors.email && touched.email ? errors.email : ''}                
+                            />
+                        </>
+                    )}
+                    </Field>
+
+                    <Field name="password">
+                    {(props) => (
+                        <>
                         <ValidationTextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            id="password"
                             label="Password"
-                            name="password"
-                            helperText={errors.password.dirty && errors.password.error ? (
-                                <Typography component={'span'}>{errors.password.message}</Typography>
-                            ) : null}
                             type={showPassword ? "text" : "password"}
-                            value={form.password}
-                            error={!!errors.password.error}
-                            onChange={onUpdateField}
-                            onBlur={onBlurField}
+                            {...props.field}
+                            margin="normal"
+                            fullWidth
+                            id={props.field.name}
+                            error={errors.password && touched.password ? true : false}
+                            helperText={errors.password && touched.password ? errors.password : ''}   
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">
@@ -190,23 +200,24 @@ export default function SignUp() {
                                         </IconButton>
                                     </InputAdornment>
                                 )
-                            }}
+                            }}                
                         />
+                        </>
+                    )}
+                    </Field>
+
+                    <Field name="confirmPassword">
+                    {(props) => (
+                        <>
                         <ValidationTextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            id="confirmPassword"
-                            label="Confirm Password"
-                            name="confirmPassword"
-                            helperText={errors.confirmPassword.dirty && errors.confirmPassword.error ? (
-                                <Typography component={'span'}>{errors.confirmPassword.message}</Typography>
-                            ) : null}
+                            label="Confirm password"
                             type={showConfirmPassword ? "text" : "password"}
-                            value={form.confirmPassword}
-                            error={!!errors.confirmPassword.error}
-                            onChange={onUpdateField}
-                            onBlur={onBlurField}
+                            {...props.field}
+                            margin="normal"
+                            fullWidth
+                            id={props.field.name}
+                            error={errors.confirmPassword && touched.confirmPassword ? true : false}
+                            helperText={errors.confirmPassword && touched.confirmPassword ? errors.confirmPassword : ''}   
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">
@@ -219,13 +230,17 @@ export default function SignUp() {
                                         </IconButton>
                                     </InputAdornment>
                                 )
-                            }}
+                            }}                
                         />
+                        </>
+                    )}
+                    </Field>
+
                         <Button
                             fullWidth
                             color='primary'
                             variant="contained"
-                            onClick={signUp}
+                            onClick={() => validateForm()}
                             sx={{
                                 mt:3,
                                 mb:2,
@@ -234,6 +249,12 @@ export default function SignUp() {
                                 fontWeight: '400',
                                 fontFamily: "Roboto"
                             }}>Sign Up</Button>
+
+                </Form>
+                )}
+
+        </Formik>  
+
                         <Typography
                             sx={{
                                 display: 'flex',
