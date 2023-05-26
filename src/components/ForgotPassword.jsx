@@ -4,20 +4,29 @@ import {NavLink} from "react-router-dom";
 import "../App.css";
 import { auth } from "../config/firebase.js";
 import { sendPasswordResetEmail } from "firebase/auth";
+import { Formik, Form, Field } from 'formik';
+import * as Yup from 'yup'
 
 export default function ForgotPassword()  {
-    const [email, setEmail] = useState('');
-    const handleChangeEmail = useCallback( (event) => {
-        setEmail(event.target.value);
-    }, [setEmail]);
+    const [showError, setShowError] = useState (false);
 
-    const resetPassword = async (e) => {
-        e.preventDefault();
+    const validationSchema = Yup.object().shape({
+        email: Yup.string()
+            .required('Email is required')
+            .email('Email is invalid'),
+         
+    });   
+
+    const resetPassword = async (auth, email) => {
+
         await sendPasswordResetEmail(auth, email)
             .catch ((error) => {
                 const errorCode = error.code;
                 const errorMessage = error.message;
-                console.log(errorCode, errorMessage);
+                console.log(errorCode);
+                if (errorCode.startsWith('auth/invalid-value-(email)')) {
+                    setShowError(true);
+                }
             });;
     }
 
@@ -49,6 +58,7 @@ export default function ForgotPassword()  {
             },
         },
     }), []);
+
     return (
         <Box sx={{ width: '100%', bgcolor: 'primary.main'}}>
             <Container component="main" maxWidth="md">
@@ -62,10 +72,6 @@ export default function ForgotPassword()  {
                     }}
                 >
                     <Box sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
                         maxWidth: '540px',
                         mt: 30
                     }}>
@@ -77,32 +83,79 @@ export default function ForgotPassword()  {
                         }}>
                             Reset your password
                         </Typography>
-                        <ValidationTextField
-                            sx={{mt: 5}}
-                            margin="normal"
-                            required
-                            fullWidth
-                            id="email"
-                            label="Email Address"
-                            name="email"
-                            value={email}
-                            onChange={handleChangeEmail}
-                        />
-                        <Button
-                            fullWidth
-                            color='primary'
-                            variant="contained"
-                            onClick={resetPassword}
+
+                        <Formik
+                        initialValues={{
+                            email: ''
+                        }}
+                        validationSchema={validationSchema}
+                        onSubmit={values => {
+                            resetPassword( auth, values);       
+                        }}
+                        >
+
+                    {({ errors, touched}) => (
+                        <Form >               
+                            <Field name="email">
+                            {(props) => (
+                                <>
+                                    <ValidationTextField
+                                        sx={{mt: 5}}
+                                        label="Email"
+                                        {...props.field}
+                                        margin="normal"
+                                        fullWidth
+                                        id={props.field.name}
+                                        error={errors.email && touched.email ? true : false}
+                                        helperText={errors.email && touched.email ? errors.email : ''}               
+                                    />
+                                </>
+                            )}
+
+                            </Field>
+
+                            <Box sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                        }}>
+
+                            <Typography
                             sx={{
-                                mt:3,
-                                mb:2,
-                                color: '#FFFFFF',
-                                fontSize: 16,
-                                fontWeight: '400',
-                                fontFamily: "Roboto"
-                            }}>
-                            Reset Password
-                        </Button>
+                                display: 'flex',
+                                color: '#d32f2f',
+                                fontSize: 18,
+                                fontWeight: '500',
+                                justifyContent: 'center',
+                                visibility: showError ? "visible" : "hidden"
+                            }}
+                        >
+                            Email does not exist
+                            </Typography>
+
+                            </Box>
+
+                                <Button
+                                    fullWidth
+                                    color='primary'
+                                    variant="contained"
+                                    type="submit"
+                                    sx={{
+                                        mt:3,
+                                        mb:2,
+                                        color: '#FFFFFF',
+                                        fontSize: 16,
+                                        fontWeight: '400',
+                                        fontFamily: "Roboto"
+                                    }}>
+                                    Reset Password
+                                </Button>
+
+                        </Form>
+                        )}
+
+                </Formik>  
+
                         <NavLink to='/sign-in'>
                             Back to login
                         </NavLink>
