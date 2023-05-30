@@ -2,12 +2,12 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDQUtuYTmdwQ0Tm3WczLs7WHI8RODkBpY4",
-    authDomain: "cashapp-auth-dev.firebaseapp.com",
-    projectId: "cashapp-auth-dev",
-    storageBucket: "cashapp-auth-dev.appspot.com",
-    messagingSenderId: "598410240944",
-    appId: "1:598410240944:web:8639e3b7a432ba1c796c75"
+    apiKey: process.env.REACT_APP_API_KEY,
+    authDomain: process.env.REACT_APP_AUTH_DOMAIN,
+    projectId: process.env.REACT_APP_PROJECT_ID,
+    storageBucket: process.env.REACT_APP_STORAGE_BUCKET,
+    messagingSenderId: process.env.REACT_APP_MESSAGING_SENDER_ID,
+    appId: process.env.REACT_APP_ID
 };
 
 const app = initializeApp(firebaseConfig);
