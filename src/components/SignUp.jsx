@@ -240,6 +240,7 @@ export default function SignUp() {
                             fullWidth
                             color='primary'
                             variant="contained"
+                            type="submit"
                             onClick={() => validateForm()}
                             sx={{
                                 mt:3,
